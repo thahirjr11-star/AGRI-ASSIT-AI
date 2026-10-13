@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Agri Assist AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #e8f5e9;
+      padding: 30px 15px;
+    }
+    .box {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      max-width: 400px;
+      margin: auto;
+    }
+    button {
+      background: green;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    #output {
+      margin-top: 20px;
+      color: #176b2c;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>🌱 Agri Assist AI</h1>
+    <p>Smart Crop Disease Demo</p>
+
+    <input type="file" id="photo" accept="image/*">
+    <br><br>
+
+    <button onclick="checkCrop()">Check Crop</button>
+
+    <div id="output"></div>
+  </div>
+
+  <script>
+    function checkCrop() {
+      const photo = document.getElementById("photo").files[0];
+      const output = document.getElementById("output");
+
+      if (!photo) {
+        output.innerHTML = "Please upload a leaf image!";
+        return;
+      }
+
+      output.innerHTML = `
+        <h2>✅ Analysis Complete</h2>
+        <p><b>Crop:</b> Tomato (Demo)</p>
+        <p><b>Status:</b> Possible Leaf Disease</p>
+        <p><b>Confidence:</b> Demo Result</p>
+        <p><b>Suggestion:</b> Check the leaf carefully
+        and consult an agriculture expert.</p>
+      `;
+    }
+  </script>
+</body>
+</html>
