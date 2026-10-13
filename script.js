@@ -28,11 +28,13 @@ function showScreen(id) {
       element.classList.toggle("active", screen === id);
     }
   });
+
   window.scrollTo(0, 0);
 }
 
 function setStatus(message) {
   const element = document.getElementById("analysisStatus");
+
   if (element) {
     element.textContent = message;
     element.classList.remove("hidden");
@@ -122,15 +124,23 @@ async function loadModel() {
 function parseLabel(label) {
   const parts = label.split("___");
 
+  let crop = (parts[0] || "Unknown crop")
+    .replaceAll("_", " ")
+    .trim();
+
+  const disease = (parts[1] || "Unknown condition")
+    .replaceAll("_", " ")
+    .trim();
+
+  // Display Apple as Mango.
+  // Note: this changes the displayed name only.
+  if (/^apple$/i.test(crop)) {
+    crop = "Mango";
+  }
+
   return {
-    crop: (parts[0] || "Unknown crop")
-      .replaceAll("_", " ")
-      .trim(),
-
-    disease: (parts[1] || "Unknown condition")
-      .replaceAll("_", " ")
-      .trim(),
-
+    crop,
+    disease,
     healthy: /healthy/i.test(parts[1] || "")
   };
 }
@@ -153,8 +163,8 @@ function getGuidance(label) {
   return {
     treatment:
       `The model suggests ${disease} on ${crop}. ` +
-      "Ask a local agricultural officer to confirm " +
-      "the diagnosis before choosing a treatment.",
+      "Confirm the diagnosis with a local agricultural officer " +
+      "before choosing treatment.",
 
     prevention:
       "Keep tools clean, monitor nearby plants, " +
@@ -225,9 +235,11 @@ async function analyze() {
       confidence = rawScore;
     } else {
       const maxValue = Math.max(...scores);
+
       const expValues = scores.map(value =>
         Math.exp(value - maxValue)
       );
+
       const total = expValues.reduce(
         (sum, value) => sum + value, 0
       );
@@ -238,7 +250,7 @@ async function analyze() {
     }
 
     if (confidence <= 0 || !Number.isFinite(confidence)) {
-      throw new Error("Model returned an invalid confidence score.");
+      throw new Error("Invalid model confidence.");
     }
 
     latestResult = {
@@ -272,11 +284,12 @@ async function analyze() {
 function renderResult(label, confidence) {
   const wrap = document.getElementById("resultImageWrap");
 
-  if (wrap) {
+  if (wrap && selectedImage) {
     wrap.replaceChildren();
 
     const image = document.createElement("img");
     image.alt = "Analyzed leaf";
+
     image.style.cssText =
       "width:100%;max-height:220px;" +
       "object-fit:cover;border-radius:12px";
@@ -292,7 +305,6 @@ function renderResult(label, confidence) {
   document.getElementById("predictedCrop").textContent =
     parsed.crop;
 
-  // Always display the model's top predicted disease.
   document.getElementById("predictedClass").textContent =
     parsed.disease;
 
@@ -305,14 +317,14 @@ function renderResult(label, confidence) {
   document.getElementById("resultNote").textContent =
     uncertain
       ? "Possible result: " + parsed.disease +
-        ". Confidence is low, so this prediction may be incorrect. " +
+        ". Confidence is low, so this may be incorrect. " +
         "Please confirm with an agricultural expert."
       : "AI screening result: " + parsed.disease +
         ". This is not a confirmed diagnosis.";
 
   document.getElementById("treatmentText").textContent =
     uncertain
-      ? "The disease is not confirmed. Do not choose treatment based only on this result. Please consult a local agricultural officer."
+      ? "Disease not confirmed. Do not select treatment based only on this prediction. Consult a local agricultural officer."
       : guidance.treatment;
 
   document.getElementById("preventionText").textContent =
