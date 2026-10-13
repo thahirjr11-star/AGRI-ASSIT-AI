@@ -1,1 +1,23 @@
 *{box-sizing:border-box}body{margin:0;background:#e9efe9;font-family:Arial,sans-serif;color:#18351f}.phone{max-width:430px;min-height:100vh;margin:auto;background:#f8fbf7;box-shadow:0 0 25px #0002;position:relative;padding-bottom:75px}header{height:62px;background:#1d6b3a;color:white;display:flex;align-items:center;justify-content:space-between;padding:0 18px;position:sticky;top:0;z-index:5}.brand{font-size:20px;font-weight:700}.lang{font-size:14px;background:#ffffff22;padding:7px 10px;border-radius:15px}main{padding:20px}.screen{display:none}.screen.active{display:block}.hero{text-align:center;padding:35px 10px 25px}.leaf{font-size:58px}.hero h1{margin:8px 0;font-size:30px}.hero p{color:#627166}.primary,.voice,.upload{width:100%;border:0;border-radius:14px;padding:15px;margin:8px 0;font-size:16px;font-weight:700;cursor:pointer}.primary{background:#1d6b3a;color:white}.primary:disabled{opacity:.6;cursor:wait}.voice{background:#e4f3e7;color:#1d6b3a;border:1px solid #b8d9c0}.upload{display:block;text-align:center;background:white;border:2px dashed #74a881;color:#1d6b3a}.upload input{display:none}.status{font-size:13px;text-align:center;color:#657267;margin:10px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:22px}.grid button{background:white;border:1px solid #d7e3d8;border-radius:14px;padding:15px 5px;font-size:25px;cursor:pointer}.grid span{display:block;font-size:12px;margin-top:7px}.back{border:0;background:none;color:#1d6b3a;font-weight:700;font-size:15px;padding:5px 0 15px}.preview{width:100%;max-height:280px;object-fit:cover;border-radius:15px;margin:12px 0;display:none}.hidden{display:none}.result-card,.info,.big-card{background:white;border:1px solid #dce7dd;border-radius:16px;padding:16px;margin:12px 0;overflow-wrap:anywhere}.tag{display:inline-block;background:#e4f3e7;color:#1d6b3a;padding:6px 10px;border-radius:15px;font-size:12px}.info h3{margin-top:0}.big-card{font-size:25px;line-height:1.7}.big-card small{font-size:14px;color:#66736a}nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);height:68px;background:white;border-top:1px solid #dce7dd;display:flex;justify-content:space-around;align-items:center;z-index:10}nav button{border:0;background:none;color:#315c3b;font-size:22px}nav span{display:block;font-size:10px;margin-top:2px}h2{margin-top:0}button:focus-visible,input:focus-visible{outline:3px solid #86b99a;outline-offset:2px}
+#city,
+#crop {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+#weatherResult,
+#irrigationResult {
+  margin: 15px 0;
+  padding: 12px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+#weatherResult p,
+#irrigationResult p {
+  margin: 8px 0;
+}
