@@ -134,3 +134,11 @@ function speakTamil() {
     : `பயிர்: ${p.crop}. கணிப்பு: ${p.disease}. நம்பிக்கை அளவு ${(latestResult.confidence * 100).toFixed(0)} சதவீதம். இது உறுதியான நோய் கண்டறிதல் அல்ல. சிகிச்சைக்கு முன் வேளாண் நிபுணரை அணுகவும்.`;
   const utterance = new SpeechSynthesisUtterance(msg); utterance.lang = "ta-IN"; speechSynthesis.cancel(); speechSynthesis.speak(utterance);
 }
+const MODEL_URL = "https://raw.githubusercontent.com/Rishit-dagli/Greenathon-Plant-AI/main/models/plant_disease_tfjs/model.json";
+const LABELS_URL = "https://raw.githubusercontent.com/Rishit-dagli/Greenathon-Plant-AI/main/models/plant_disease_tfjs/class_indices.json";
+const labelMap = await response.json();
+const loadedLabels = Array.isArray(labelMap)
+  ? labelMap
+  : Object.keys(labelMap)
+      .sort((a, b) => Number(a) - Number(b))
+      .map(key => labelMap[key]);
