@@ -1,3 +1,4 @@
+
 "use strict";
 
 const MODEL_URL =
@@ -27,13 +28,11 @@ function showScreen(id) {
       element.classList.toggle("active", screen === id);
     }
   });
-
   window.scrollTo(0, 0);
 }
 
 function setStatus(message) {
   const element = document.getElementById("analysisStatus");
-
   if (element) {
     element.textContent = message;
     element.classList.remove("hidden");
@@ -178,7 +177,6 @@ async function analyze() {
 
   try {
     await loadModel();
-
     setStatus("Analyzing leaf photo...");
 
     bitmap = await createImageBitmap(selectedImage);
@@ -188,7 +186,6 @@ async function analyze() {
         .fromPixels(bitmap)
         .resizeBilinear([IMAGE_SIZE, IMAGE_SIZE])
         .toFloat()
-        // MobileNet-style input normalization
         .div(127.5)
         .sub(1)
         .expandDims(0);
@@ -216,31 +213,32 @@ async function analyze() {
 
     const rawScore = scores[bestIndex];
 
-    // This model is expected to output class probabilities.
-    // If the output is not probability-like, convert it to
-    // probabilities rather than applying softmax twice.
+    const isProbabilityOutput =
+      scores.every(value => value >= 0 && value <= 1) &&
+      Math.abs(
+        scores.reduce((sum, value) => sum + value, 0) - 1
+      ) < 0.05;
+
     let confidence;
 
-    const valuesLookLikeProbabilities =
-      scores.every(value => value >= 0 && value <= 1) &&
-      Math.abs(scores.reduce((sum, value) => sum + value, 0) - 1) < 0.05;
-
-    if (valuesLookLikeProbabilities) {
+    if (isProbabilityOutput) {
       confidence = rawScore;
     } else {
       const maxValue = Math.max(...scores);
       const expValues = scores.map(value =>
         Math.exp(value - maxValue)
       );
-      const total = expValues.reduce((sum, value) => sum + value, 0);
+      const total = expValues.reduce(
+        (sum, value) => sum + value, 0
+      );
 
-      confidence = total > 0 ? expValues[bestIndex] / total : 0;
+      confidence = total > 0
+        ? expValues[bestIndex] / total
+        : 0;
     }
 
     if (confidence <= 0 || !Number.isFinite(confidence)) {
-      throw new Error(
-        "The model returned no usable confidence. Please try another photo."
-      );
+      throw new Error("Model returned an invalid confidence score.");
     }
 
     latestResult = {
@@ -294,28 +292,27 @@ function renderResult(label, confidence) {
   document.getElementById("predictedCrop").textContent =
     parsed.crop;
 
+  // Always display the model's top predicted disease.
   document.getElementById("predictedClass").textContent =
-    uncertain
-      ? "Uncertain - try a clearer photo"
-      : parsed.disease;
+    parsed.disease;
 
   document.getElementById("confidence").textContent =
     (confidence * 100).toFixed(1) + "%";
 
   document.getElementById("resultTag").textContent =
-    uncertain ? "Low confidence" : "Model prediction";
+    uncertain ? "Low Confidence" : "AI Prediction";
 
   document.getElementById("resultNote").textContent =
     uncertain
-      ? "The prediction is uncertain. Try one clear leaf " +
-        "in natural light. Results are not a confirmed diagnosis."
-      : "AI screening only, not a confirmed diagnosis. " +
-        "Consult an agricultural expert before treatment.";
+      ? "Possible result: " + parsed.disease +
+        ". Confidence is low, so this prediction may be incorrect. " +
+        "Please confirm with an agricultural expert."
+      : "AI screening result: " + parsed.disease +
+        ". This is not a confirmed diagnosis.";
 
   document.getElementById("treatmentText").textContent =
     uncertain
-      ? "No disease-specific treatment is suggested. " +
-        "Ask a local agricultural officer."
+      ? "The disease is not confirmed. Do not choose treatment based only on this result. Please consult a local agricultural officer."
       : guidance.treatment;
 
   document.getElementById("preventionText").textContent =
@@ -361,7 +358,8 @@ function startVoice() {
   try {
     recognizer.start();
   } catch (error) {
-    status.textContent = "Voice input மீண்டும் தொடங்க முடியவில்லை.";
+    status.textContent =
+      "Voice input மீண்டும் தொடங்க முடியவில்லை.";
   }
 }
 
@@ -377,9 +375,10 @@ function speakTamil() {
 
   const message =
     latestResult.confidence < MIN_CONFIDENCE
-      ? "இந்த கணிப்பு உறுதியானதல்ல. " +
-        "தெளிவான புகைப்படம் எடுத்து மீண்டும் முயற்சி செய்யவும். " +
-        "வேளாண் அதிகாரியிடம் ஆலோசனை பெறவும்."
+      ? `இந்த இலைக்கான கணிப்பு ${parsed.disease}. ` +
+        "நம்பிக்கை அளவு குறைவாக உள்ளது. " +
+        "இது தவறாக இருக்கலாம். " +
+        "வேளாண் நிபுணரிடம் உறுதிப்படுத்தவும்."
       : `பயிர்: ${parsed.crop}. ` +
         `கணிப்பு: ${parsed.disease}. ` +
         `நம்பிக்கை அளவு ${(latestResult.confidence * 100).toFixed(0)} சதவீதம். ` +
