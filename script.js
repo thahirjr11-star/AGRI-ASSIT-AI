@@ -16,12 +16,8 @@ let latestResult = null;
 let loadPromise = null;
 
 const screens = [
-  "home",
-  "capture",
-  "result",
-  "weather",
-  "irrigation",
-  "market"
+  "home", "capture", "result",
+  "weather", "irrigation", "market"
 ];
 
 function showScreen(id) {
@@ -49,11 +45,10 @@ const photoInput = document.getElementById("photoInput");
 if (photoInput) {
   photoInput.addEventListener("change", event => {
     const file = event.target.files?.[0];
-
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setStatus("Please select an image file.");
+      setStatus("Please select a valid image.");
       return;
     }
 
@@ -78,26 +73,23 @@ if (photoInput) {
 
 async function loadModel() {
   if (model && labels.length === 38) return;
-
   if (loadPromise) return loadPromise;
 
   loadPromise = (async () => {
     if (!window.tf) {
-      throw new Error(
-        "TensorFlow.js failed to load. Check your internet."
-      );
+      throw new Error("TensorFlow.js did not load.");
     }
 
-    setStatus("Loading AI model. Please wait...");
+    setStatus("Loading AI model...");
 
     const [loadedModel, response] = await Promise.all([
       tf.loadLayersModel(MODEL_URL),
-      fetch(LABELS_URL, { cache: "no-store" })
+      fetch(LABELS_URL)
     ]);
 
     if (!response.ok) {
       loadedModel.dispose();
-      throw new Error("Unable to load disease labels.");
+      throw new Error("Could not load disease labels.");
     }
 
     const labelMap = await response.json();
@@ -108,20 +100,12 @@ async function loadModel() {
           .sort((a, b) => Number(a) - Number(b))
           .map(key => labelMap[key]);
 
-    const outputShape = loadedModel.outputs?.[0]?.shape;
-    const outputCount = outputShape
-      ? outputShape[outputShape.length - 1]
-      : null;
+    const shape = loadedModel.outputs?.[0]?.shape;
+    const count = shape ? shape[shape.length - 1] : null;
 
-    if (
-      loadedLabels.length !== 38 ||
-      (outputCount && outputCount !== 38)
-    ) {
+    if (loadedLabels.length !== 38 || count !== 38) {
       loadedModel.dispose();
-
-      throw new Error(
-        "Model and disease labels do not match."
-      );
+      throw new Error("Model and labels do not match.");
     }
 
     model = loadedModel;
@@ -139,19 +123,16 @@ async function loadModel() {
 function parseLabel(label) {
   const parts = label.split("___");
 
-  const crop = (parts[0] || "Unknown crop")
-    .replaceAll("_", " ")
-    .replaceAll(",", "")
-    .trim();
-
-  const disease = (parts[1] || "Unknown disease")
-    .replaceAll("_", " ")
-    .trim();
-
   return {
-    crop,
-    disease,
-    healthy: /healthy/i.test(disease)
+    crop: (parts[0] || "Unknown crop")
+      .replaceAll("_", " ")
+      .trim(),
+
+    disease: (parts[1] || "Unknown condition")
+      .replaceAll("_", " ")
+      .trim(),
+
+    healthy: /healthy/i.test(parts[1] || "")
   };
 }
 
@@ -162,7 +143,7 @@ function getGuidance(label) {
     return {
       treatment:
         "The model classified this leaf as healthy. " +
-        "Continue normal crop care and monitor the plant.",
+        "Continue normal crop care and monitor regularly.",
 
       prevention:
         "Inspect leaves regularly, keep tools clean, " +
@@ -170,51 +151,17 @@ function getGuidance(label) {
     };
   }
 
-  const virus =
-    /virus|mosaic|yellow leaf curl/i.test(disease);
+  return {
+    treatment:
+      `The model suggests ${disease} on ${crop}. ` +
+      "Ask a local agricultural officer to confirm " +
+      "the diagnosis before choosing a treatment.",
 
-  const citrus =
-    /huanglongbing|greening/i.test(disease);
-
-  const mites =
-    /spider mites/i.test(disease);
-
-  const mildew =
-    /mildew|powdery/i.test(disease);
-
-  let treatment =
-    `The model suggests ${disease} on ${crop}. ` +
-    "Ask a local agricultural officer to confirm " +
-    "the diagnosis before choosing a treatment.";
-
-  let prevention =
-    "Keep tools clean, monitor nearby plants, " +
-    "provide suitable airflow, and avoid unnecessary " +
-    "leaf wetness.";
-
-  if (virus) {
-    treatment =
-      "The model suggests a possible virus-related " +
-      "condition. Contact a local agricultural officer " +
-      "for confirmation and management advice.";
-  } else if (citrus) {
-    treatment =
-      "The model suggests possible citrus greening. " +
-      "Contact your local horticulture department " +
-      "for confirmation and guidance.";
-  } else if (mites) {
-    treatment =
-      "The model suggests possible spider-mite damage. " +
-      "Ask an agricultural officer to confirm the cause.";
-  }
-
-  if (mildew) {
-    prevention =
-      "Improve airflow, avoid overcrowding plants, " +
-      "and water near the soil when possible.";
-  }
-
-  return { treatment, prevention };
+    prevention:
+      "Keep tools clean, monitor nearby plants, " +
+      "provide suitable airflow, and avoid unnecessary " +
+      "leaf wetness."
+  };
 }
 
 async function analyze() {
@@ -224,11 +171,10 @@ async function analyze() {
   }
 
   const button = document.getElementById("analyzeBtn");
-
   if (button) button.disabled = true;
 
   let bitmap = null;
-  let probabilities = null;
+  let prediction = null;
 
   try {
     await loadModel();
@@ -237,32 +183,27 @@ async function analyze() {
 
     bitmap = await createImageBitmap(selectedImage);
 
-    probabilities = tf.tidy(() => {
+    prediction = tf.tidy(() => {
       const input = tf.browser
         .fromPixels(bitmap)
         .resizeBilinear([IMAGE_SIZE, IMAGE_SIZE])
         .toFloat()
-        .div(255)
+        // MobileNet-style input normalization
+        .div(127.5)
+        .sub(1)
         .expandDims(0);
 
       const output = model.predict(input);
-
-      const logits = Array.isArray(output)
-        ? output[0]
-        : output;
-
-      return tf.softmax(logits).squeeze();
+      return Array.isArray(output) ? output[0] : output;
     });
 
-    const scores = Array.from(
-      await probabilities.data()
-    );
+    const scores = Array.from(await prediction.data());
 
     if (
       scores.length !== labels.length ||
       scores.some(value => !Number.isFinite(value))
     ) {
-      throw new Error("Invalid model prediction.");
+      throw new Error("Invalid prediction values.");
     }
 
     let bestIndex = 0;
@@ -273,15 +214,41 @@ async function analyze() {
       }
     }
 
+    const rawScore = scores[bestIndex];
+
+    // This model is expected to output class probabilities.
+    // If the output is not probability-like, convert it to
+    // probabilities rather than applying softmax twice.
+    let confidence;
+
+    const valuesLookLikeProbabilities =
+      scores.every(value => value >= 0 && value <= 1) &&
+      Math.abs(scores.reduce((sum, value) => sum + value, 0) - 1) < 0.05;
+
+    if (valuesLookLikeProbabilities) {
+      confidence = rawScore;
+    } else {
+      const maxValue = Math.max(...scores);
+      const expValues = scores.map(value =>
+        Math.exp(value - maxValue)
+      );
+      const total = expValues.reduce((sum, value) => sum + value, 0);
+
+      confidence = total > 0 ? expValues[bestIndex] / total : 0;
+    }
+
+    if (confidence <= 0 || !Number.isFinite(confidence)) {
+      throw new Error(
+        "The model returned no usable confidence. Please try another photo."
+      );
+    }
+
     latestResult = {
       label: labels[bestIndex],
-      confidence: scores[bestIndex]
+      confidence
     };
 
-    renderResult(
-      latestResult.label,
-      latestResult.confidence
-    );
+    renderResult(latestResult.label, confidence);
 
     document.getElementById("analysisStatus")
       ?.classList.add("hidden");
@@ -294,16 +261,12 @@ async function analyze() {
     setStatus(
       "AI prediction unavailable: " +
       (error.message || "Unknown error") +
-      ". Check internet and try again."
+      ". Please refresh and try again."
     );
 
   } finally {
     if (bitmap) bitmap.close();
-
-    if (probabilities) {
-      probabilities.dispose();
-    }
-
+    if (prediction) prediction.dispose();
     if (button) button.disabled = false;
   }
 }
@@ -311,18 +274,18 @@ async function analyze() {
 function renderResult(label, confidence) {
   const wrap = document.getElementById("resultImageWrap");
 
-  wrap.replaceChildren();
+  if (wrap) {
+    wrap.replaceChildren();
 
-  const image = document.createElement("img");
+    const image = document.createElement("img");
+    image.alt = "Analyzed leaf";
+    image.style.cssText =
+      "width:100%;max-height:220px;" +
+      "object-fit:cover;border-radius:12px";
 
-  image.alt = "Analyzed leaf";
-  image.style.cssText =
-    "width:100%;max-height:220px;" +
-    "object-fit:cover;border-radius:12px";
-
-  image.src = URL.createObjectURL(selectedImage);
-
-  wrap.appendChild(image);
+    image.src = URL.createObjectURL(selectedImage);
+    wrap.appendChild(image);
+  }
 
   const parsed = parseLabel(label);
   const uncertain = confidence < MIN_CONFIDENCE;
@@ -344,10 +307,10 @@ function renderResult(label, confidence) {
 
   document.getElementById("resultNote").textContent =
     uncertain
-      ? "The prediction is uncertain. Try a clear photo " +
-        "of one leaf in natural light."
+      ? "The prediction is uncertain. Try one clear leaf " +
+        "in natural light. Results are not a confirmed diagnosis."
       : "AI screening only, not a confirmed diagnosis. " +
-        "Results may be less reliable for field photos.";
+        "Consult an agricultural expert before treatment.";
 
   document.getElementById("treatmentText").textContent =
     uncertain
@@ -373,7 +336,6 @@ function startVoice() {
   }
 
   const recognizer = new SpeechRecognition();
-
   recognizer.lang = "ta-IN";
   recognizer.interimResults = false;
 
@@ -399,8 +361,7 @@ function startVoice() {
   try {
     recognizer.start();
   } catch (error) {
-    status.textContent =
-      "Voice input மீண்டும் தொடங்க முடியவில்லை.";
+    status.textContent = "Voice input மீண்டும் தொடங்க முடியவில்லை.";
   }
 }
 
@@ -423,10 +384,9 @@ function speakTamil() {
         `கணிப்பு: ${parsed.disease}. ` +
         `நம்பிக்கை அளவு ${(latestResult.confidence * 100).toFixed(0)} சதவீதம். ` +
         "இது உறுதியான நோய் கண்டறிதல் அல்ல. " +
-        "சிகிச்சைக்கு முன் வேளாண் நிபுணரை அணுகவும்.";
+        "வேளாண் நிபுணரை அணுகவும்.";
 
   const utterance = new SpeechSynthesisUtterance(message);
-
   utterance.lang = "ta-IN";
 
   speechSynthesis.cancel();
