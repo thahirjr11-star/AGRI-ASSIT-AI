@@ -403,3 +403,184 @@ function speakTamil() {
   speechSynthesis.cancel();
   speechSynthesis.speak(utterance);
 }
+// 🌦️ WEATHER ALERT
+let weatherTamil = "";
+
+async function getWeather() {
+  const city = document.getElementById("city").value.trim();
+  const result = document.getElementById("weatherResult");
+
+  if (!city) {
+    result.innerHTML = "Please enter a city name.";
+    return;
+  }
+
+  result.innerHTML = "Loading weather...";
+
+  try {
+    const geoURL =
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
+
+    const geoResponse = await fetch(geoURL);
+    const geoData = await geoResponse.json();
+
+    if (!geoData.results || geoData.results.length === 0) {
+      result.innerHTML = "City not found. Try another city.";
+      return;
+    }
+
+    const place = geoData.results[0];
+
+    const weatherURL =
+      `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m`;
+
+    const weatherResponse = await fetch(weatherURL);
+    const weatherData = await weatherResponse.json();
+
+    const w = weatherData.current;
+
+    const descriptions = {
+      0: "Clear sky",
+      1: "Mainly clear",
+      2: "Partly cloudy",
+      3: "Cloudy",
+      45: "Foggy",
+      48: "Foggy",
+      51: "Light drizzle",
+      53: "Drizzle",
+      55: "Heavy drizzle",
+      61: "Light rain",
+      63: "Rain",
+      65: "Heavy rain",
+      80: "Rain showers",
+      81: "Rain showers",
+      82: "Heavy rain showers",
+      95: "Thunderstorm"
+    };
+
+    const condition =
+      descriptions[w.weather_code] || "Variable weather";
+
+    result.innerHTML = `
+      <h3>📍 ${place.name}, ${place.country}</h3>
+      <p>🌡️ Temperature: ${w.temperature_2m}°C</p>
+      <p>🤒 Feels Like: ${w.apparent_temperature}°C</p>
+      <p>💧 Humidity: ${w.relative_humidity_2m}%</p>
+      <p>🌧️ Rainfall: ${w.precipitation} mm</p>
+      <p>🌤️ Condition: ${condition}</p>
+      <p>💨 Wind Speed: ${w.wind_speed_10m} km/h</p>
+    `;
+
+    weatherTamil =
+      `${place.name}. வெப்பநிலை ${w.temperature_2m} டிகிரி செல்சியஸ். ` +
+      `காற்றின் ஈரப்பதம் ${w.relative_humidity_2m} சதவீதம். ` +
+      `மழையளவு ${w.precipitation} மில்லிமீட்டர். ` +
+      `வானிலை ${condition}.`;
+
+  } catch (error) {
+    result.innerHTML =
+      "Weather unavailable. Check your internet connection and try again.";
+  }
+}
+
+
+// 🔊 TAMIL VOICE
+function speakTamil(text) {
+  if (!("speechSynthesis" in window)) {
+    alert("Tamil voice is not supported in this browser.");
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const message = new SpeechSynthesisUtterance(text);
+  message.lang = "ta-IN";
+  message.rate = 0.85;
+
+  const voices = window.speechSynthesis.getVoices();
+
+  const tamilVoice = voices.find(voice =>
+    voice.lang.toLowerCase().startsWith("ta")
+  );
+
+  if (tamilVoice) {
+    message.voice = tamilVoice;
+  }
+
+  window.speechSynthesis.speak(message);
+}
+
+function speakWeather() {
+  if (!weatherTamil) {
+    speakTamil("முதலில் வானிலை விவரங்களைப் பெறவும்.");
+    return;
+  }
+
+  speakTamil(weatherTamil);
+}
+
+
+// 💧 IRRIGATION GUIDANCE
+let irrigationTamil = "";
+
+function getIrrigation() {
+  const crop = document.getElementById("crop").value;
+  const result = document.getElementById("irrigationResult");
+
+  const advice = {
+    rice: {
+      title: "Rice / நெல்",
+      text: "Check field water level regularly. Avoid unnecessary continuous flooding.",
+      tamil: "நெல் வயலில் நீர்மட்டத்தைத் தொடர்ந்து கண்காணிக்கவும். தேவையற்ற நீர் தேக்கத்தைத் தவிர்க்கவும்."
+    },
+
+    tomato: {
+      title: "Tomato / தக்காளி",
+      text: "Keep soil moisture consistent. Avoid waterlogging near the roots.",
+      tamil: "தக்காளிச் செடிகளுக்கு மண்ணில் சீரான ஈரப்பதத்தைப் பராமரிக்கவும். வேர்களில் நீர் தேங்குவதைத் தவிர்க்கவும்."
+    },
+
+    mango: {
+      title: "Mango / மாம்பழம்",
+      text: "Water according to soil dryness, tree age and rainfall.",
+      tamil: "மண்ணின் வறட்சி, மரத்தின் வயது மற்றும் மழையைப் பொறுத்து நீர் பாய்ச்சவும்."
+    },
+
+    banana: {
+      title: "Banana / வாழை",
+      text: "Check soil moisture frequently, especially during hot weather.",
+      tamil: "குறிப்பாக வெயில் காலத்தில் வாழைச் செடிகளின் மண்ணில் ஈரப்பதம் உள்ளதா என்று அடிக்கடி பார்க்கவும்."
+    },
+
+    groundnut: {
+      title: "Groundnut / நிலக்கடலை",
+      text: "Avoid both water shortage and waterlogging. Monitor soil moisture during flowering and pod development.",
+      tamil: "நிலக்கடலைப் பயிரில் நீர்ப்பற்றாக்குறையையும் நீர் தேக்கத்தையும் தவிர்க்கவும். பூக்கும் மற்றும் காய் உருவாகும் காலத்தில் மண்ணின் ஈரப்பதத்தைக் கண்காணிக்கவும்."
+    },
+
+    cotton: {
+      title: "Cotton / பருத்தி",
+      text: "Water according to soil moisture and crop growth stage. Ensure proper drainage.",
+      tamil: "பருத்திப் பயிரின் வளர்ச்சி நிலை மற்றும் மண்ணின் ஈரப்பதத்திற்கு ஏற்ப நீர் பாய்ச்சவும். நீர் வடிகால் வசதியை உறுதி செய்யவும்."
+    }
+  };
+
+  const selected = advice[crop];
+
+  result.innerHTML = `
+    <h3>🌱 ${selected.title}</h3>
+    <p>${selected.text}</p>
+    <small>General guidance only. Check local soil and weather conditions.</small>
+  `;
+
+  irrigationTamil = selected.tamil;
+}
+
+function speakIrrigation() {
+  if (!irrigationTamil) {
+    speakTamil("முதலில் பயிரைத் தேர்ந்தெடுத்து வழிகாட்டுதலைப் பெறவும்.");
+    return;
+  }
+
+  speakTamil(irrigationTamil);
+}
