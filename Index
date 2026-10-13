@@ -66,3 +66,54 @@
   </script>
 </body>
 </html>
+<!-- WEATHER ALERT -->
+<section id="weather" class="screen">
+  <button class="back" onclick="showScreen('home')">← Back</button>
+
+  <h2>🌦️ Weather Alert</h2>
+
+  <div class="big-card">
+    <input
+      type="text"
+      id="city"
+      placeholder="Enter city name (e.g. Chennai)"
+    />
+
+    <button onclick="getWeather()">Get Weather</button>
+
+    <div id="weatherResult">
+      Weather details will appear here.
+    </div>
+
+    <button onclick="speakWeather()">🔊 Tamil Voice</button>
+  </div>
+</section>
+
+
+<!-- IRRIGATION REMINDER -->
+<section id="irrigation" class="screen">
+  <button class="back" onclick="showScreen('home')">← Back</button>
+
+  <h2>💧 Irrigation Reminder</h2>
+
+  <div class="big-card">
+    <label for="crop">Select Your Crop:</label>
+
+    <select id="crop">
+      <option value="rice">Rice / நெல்</option>
+      <option value="tomato">Tomato / தக்காளி</option>
+      <option value="mango">Mango / மாம்பழம்</option>
+      <option value="banana">Banana / வாழை</option>
+      <option value="groundnut">Groundnut / நிலக்கடலை</option>
+      <option value="cotton">Cotton / பருத்தி</option>
+    </select>
+
+    <button onclick="getIrrigation()">Check Irrigation</button>
+
+    <div id="irrigationResult">
+      Select a crop to get watering guidance.
+    </div>
+
+    <button onclick="speakIrrigation()">🔊 Tamil Voice</button>
+  </div>
+</section>
