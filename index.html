@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agri Assist AI</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="phone">
+  <header><div class="brand">🌱 Agri Assist AI</div><div class="lang">தமிழ்</div></header>
+  <main>
+    <section id="home" class="screen active">
+      <div class="hero"><div class="leaf">🌿</div><h1>Agri Assist AI</h1><p>Smart farming support in simple Tamil.</p></div>
+      <button class="primary" onclick="showScreen('capture')">📷 Capture Crop Photo</button>
+      <button class="voice" onclick="startVoice()">🎤 தமிழில் பேசுங்கள்</button>
+      <div id="voiceStatus" class="status">Voice assistant ready</div>
+      <div class="grid"><button onclick="showScreen('weather')">🌦️<span>Weather</span></button><button onclick="showScreen('irrigation')">💧<span>Irrigation</span></button><button onclick="showScreen('market')">💰<span>Market Price</span></button></div>
+      <p class="status">Leaf model supports 38 PlantVillage classes. Weather, irrigation and market cards are demo features.</p>
+    </section>
+    <section id="capture" class="screen">
+      <button class="back" onclick="showScreen('home')">← Back</button><h2>📷 Crop / Leaf Photo</h2><p>பாதிக்கப்பட்ட இலையின் தெளிவான புகைப்படத்தைத் தேர்வு செய்யவும்.</p>
+      <label class="upload"><input id="photoInput" type="file" accept="image/png,image/jpeg,image/webp" capture="environment"><span>📸 Take / Upload Photo</span></label>
+      <img id="preview" class="preview" alt="Selected leaf preview">
+      <button id="analyzeBtn" class="primary hidden" onclick="analyze()">🔍 Analyze with AI</button><div id="analysisStatus" class="status hidden" aria-live="polite">Loading model…</div>
+    </section>
+    <section id="result" class="screen">
+      <button class="back" onclick="showScreen('capture')">← Back</button><h2>🌿 AI Disease Result</h2>
+      <div class="result-card"><div id="resultImageWrap"></div><p><b>Crop:</b> <span id="predictedCrop">—</span></p><p><b>Prediction:</b> <span id="predictedClass">—</span></p><p><b>Confidence:</b> <span id="confidence">—</span></p><div id="resultTag" class="tag">Model prediction</div><p id="resultNote"></p></div>
+      <div class="info"><h3>💊 General care guidance</h3><p id="treatmentText">—</p></div><div class="info"><h3>🛡️ Prevention</h3><p id="preventionText">—</p></div>
+      <button class="voice" onclick="speakTamil()">🔊 தமிழில் முடிவைக் கேட்க</button><button class="primary" onclick="showScreen('capture')">Scan another leaf</button>
+    </section>
+    <section id="weather" class="screen"><button class="back" onclick="showScreen('home')">← Back</button><h2>🌦️ Weather Alert</h2><div class="big-card">☀️<strong> Weather demo</strong><br><small>Live weather API is not connected in this version.</small></div></section>
+    <section id="irrigation" class="screen"><button class="back" onclick="showScreen('home')">← Back</button><h2>💧 Irrigation Reminder</h2><div class="big-card">💧<strong> Irrigation Reminder</strong><br><small>Check soil moisture and crop-specific water needs. This is a general demo reminder.</small></div></section>
+    <section id="market" class="screen"><button class="back" onclick="showScreen('home')">← Back</button><h2>💰 Market Price</h2><div class="big-card">📈<strong> Market Price demo</strong><br><small>Live mandi prices are not connected in this version.</small></div></section>
+  </main>
+  <nav><button onclick="showScreen('home')">⌂<span>Home</span></button><button onclick="showScreen('capture')">📷<span>Scan</span></button><button onclick="startVoice()">🎤<span>Voice</span></button></nav>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js" crossorigin="anonymous"></script><script src="script.js"></script>
+</body>
+</html>
