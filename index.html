@@ -1,41 +1,618 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Agri Assist AI</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agri Assist AI</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+
+    .feature-button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 10px;
+      background: #248447;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .feature-result {
+      margin: 15px 0;
+      padding: 12px;
+      line-height: 1.8;
+      overflow-wrap: anywhere;
+      text-align: left;
+    }
+
+    .feature-result p {
+      margin: 8px 0;
+    }
+
+    .feature-result h3 {
+      margin-top: 5px;
+    }
+
+    .feature-note {
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
 </head>
+
 <body>
+
 <div class="phone">
-  <header><div class="brand">🌱 Agri Assist AI</div><div class="lang">தமிழ்</div></header>
+
+  <header>
+    <div class="brand">🌱 Agri Assist AI</div>
+    <div class="lang">தமிழ்</div>
+  </header>
+
   <main>
+
+    <!-- HOME -->
     <section id="home" class="screen active">
-      <div class="hero"><div class="leaf">🌿</div><h1>Agri Assist AI</h1><p>Smart farming support in simple Tamil.</p></div>
-      <button class="primary" onclick="showScreen('capture')">📷 Capture Crop Photo</button>
-      <button class="voice" onclick="startVoice()">🎤 தமிழில் பேசுங்கள்</button>
-      <div id="voiceStatus" class="status">Voice assistant ready</div>
-      <div class="grid"><button onclick="showScreen('weather')">🌦️<span>Weather</span></button><button onclick="showScreen('irrigation')">💧<span>Irrigation</span></button><button onclick="showScreen('market')">💰<span>Market Price</span></button></div>
-      <p class="status">Leaf model supports 38 PlantVillage classes. Weather, irrigation and market cards are demo features.</p>
+
+      <div class="hero">
+        <div class="leaf">🌿</div>
+        <h1>Agri Assist AI</h1>
+        <p>Smart farming support in simple Tamil.</p>
+      </div>
+
+      <button class="primary" onclick="showScreen('capture')">
+        📷 Capture Crop Photo
+      </button>
+
+      <button class="voice" onclick="startVoice()">
+        🎤 தமிழில் பேசுங்கள்
+      </button>
+
+      <div id="voiceStatus" class="status">
+        Voice assistant ready
+      </div>
+
+      <div class="grid">
+        <button onclick="showScreen('weather')">
+          🌦️<span>Weather</span>
+        </button>
+
+        <button onclick="showScreen('irrigation')">
+          💧<span>Irrigation</span>
+        </button>
+
+        <button onclick="showScreen('market')">
+          💰<span>Market Price</span>
+        </button>
+      </div>
+
+      <p class="status">
+        AI leaf disease detection, weather information,
+        irrigation guidance and Tamil voice support.
+      </p>
+
     </section>
+
+
+    <!-- CROP PHOTO -->
     <section id="capture" class="screen">
-      <button class="back" onclick="showScreen('home')">← Back</button><h2>📷 Crop / Leaf Photo</h2><p>பாதிக்கப்பட்ட இலையின் தெளிவான புகைப்படத்தைத் தேர்வு செய்யவும்.</p>
-      <label class="upload"><input id="photoInput" type="file" accept="image/png,image/jpeg,image/webp" capture="environment"><span>📸 Take / Upload Photo</span></label>
-      <img id="preview" class="preview" alt="Selected leaf preview">
-      <button id="analyzeBtn" class="primary hidden" onclick="analyze()">🔍 Analyze with AI</button><div id="analysisStatus" class="status hidden" aria-live="polite">Loading model…</div>
+
+      <button class="back" onclick="showScreen('home')">
+        ← Back
+      </button>
+
+      <h2>📷 Crop / Leaf Photo</h2>
+
+      <p>பாதிக்கப்பட்ட இலையின் தெளிவான புகைப்படத்தைத் தேர்வு செய்யவும்.</p>
+
+      <label class="upload">
+        <input
+          id="photoInput"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          capture="environment"
+        >
+        <span>📸 Take / Upload Photo</span>
+      </label>
+
+      <img
+        id="preview"
+        class="preview"
+        alt="Selected leaf preview"
+      >
+
+      <button
+        id="analyzeBtn"
+        class="primary hidden"
+        onclick="analyze()"
+      >
+        🔍 Analyze with AI
+      </button>
+
+      <div
+        id="analysisStatus"
+        class="status hidden"
+        aria-live="polite"
+      >
+        Loading model…
+      </div>
+
     </section>
+
+
+    <!-- AI RESULT -->
     <section id="result" class="screen">
-      <button class="back" onclick="showScreen('capture')">← Back</button><h2>🌿 AI Disease Result</h2>
-      <div class="result-card"><div id="resultImageWrap"></div><p><b>Crop:</b> <span id="predictedCrop">—</span></p><p><b>Prediction:</b> <span id="predictedClass">—</span></p><p><b>Confidence:</b> <span id="confidence">—</span></p><div id="resultTag" class="tag">Model prediction</div><p id="resultNote"></p></div>
-      <div class="info"><h3>💊 General care guidance</h3><p id="treatmentText">—</p></div><div class="info"><h3>🛡️ Prevention</h3><p id="preventionText">—</p></div>
-      <button class="voice" onclick="speakTamil()">🔊 தமிழில் முடிவைக் கேட்க</button><button class="primary" onclick="showScreen('capture')">Scan another leaf</button>
+
+      <button class="back" onclick="showScreen('capture')">
+        ← Back
+      </button>
+
+      <h2>🌿 AI Disease Result</h2>
+
+      <div class="result-card">
+
+        <div id="resultImageWrap"></div>
+
+        <p>
+          <b>Crop:</b>
+          <span id="predictedCrop">—</span>
+        </p>
+
+        <p>
+          <b>Prediction:</b>
+          <span id="predictedClass">—</span>
+        </p>
+
+        <p>
+          <b>Confidence:</b>
+          <span id="confidence">—</span>
+        </p>
+
+        <div id="resultTag" class="tag">
+          Model prediction
+        </div>
+
+        <p id="resultNote"></p>
+
+      </div>
+
+      <div class="info">
+        <h3>💊 General care guidance</h3>
+        <p id="treatmentText">—</p>
+      </div>
+
+      <div class="info">
+        <h3>🛡️ Prevention</h3>
+        <p id="preventionText">—</p>
+      </div>
+
+      <button class="voice" onclick="speakTamil()">
+        🔊 தமிழில் முடிவைக் கேட்க
+      </button>
+
+      <button class="primary" onclick="showScreen('capture')">
+        Scan Another Leaf
+      </button>
+
     </section>
-    <section id="weather" class="screen"><button class="back" onclick="showScreen('home')">← Back</button><h2>🌦️ Weather Alert</h2><div class="big-card">☀️<strong> Weather demo</strong><br><small>Live weather API is not connected in this version.</small></div></section>
-    <section id="irrigation" class="screen"><button class="back" onclick="showScreen('home')">← Back</button><h2>💧 Irrigation Reminder</h2><div class="big-card">💧<strong> Irrigation Reminder</strong><br><small>Check soil moisture and crop-specific water needs. This is a general demo reminder.</small></div></section>
-    <section id="market" class="screen"><button class="back" onclick="showScreen('home')">← Back</button><h2>💰 Market Price</h2><div class="big-card">📈<strong> Market Price demo</strong><br><small>Live mandi prices are not connected in this version.</small></div></section>
+
+
+    <!-- WEATHER -->
+    <section id="weather" class="screen">
+
+      <button class="back" onclick="showScreen('home')">
+        ← Back
+      </button>
+
+      <h2>🌦️ Weather Alert</h2>
+
+      <div class="big-card">
+
+        <h3>Check Your Local Weather</h3>
+
+        <p>Enter your city name to get current weather details.</p>
+
+        <input
+          type="text"
+          id="city"
+          placeholder="Enter city (e.g. Chennai)"
+        >
+
+        <button
+          class="feature-button"
+          onclick="getWeather()"
+        >
+          🌤️ Get Weather
+        </button>
+
+        <div
+          id="weatherResult"
+          class="feature-result"
+          aria-live="polite"
+        >
+          Weather details will appear here.
+        </div>
+
+        <button
+          class="voice"
+          onclick="speakWeather()"
+        >
+          🔊 தமிழில் வானிலையைக் கேட்க
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- IRRIGATION -->
+    <section id="irrigation" class="screen">
+
+      <button class="back" onclick="showScreen('home')">
+        ← Back
+      </button>
+
+      <h2>💧 Irrigation Reminder</h2>
+
+      <div class="big-card">
+
+        <h3>Select Your Crop</h3>
+
+        <p>
+          Choose your crop to receive general watering guidance.
+        </p>
+
+        <select id="crop">
+
+          <option value="rice">Rice / நெல்</option>
+          <option value="tomato">Tomato / தக்காளி</option>
+          <option value="mango">Mango / மாம்பழம்</option>
+          <option value="banana">Banana / வாழை</option>
+          <option value="groundnut">Groundnut / நிலக்கடலை</option>
+          <option value="cotton">Cotton / பருத்தி</option>
+
+        </select>
+
+        <button
+          class="feature-button"
+          onclick="getIrrigation()"
+        >
+          💧 Get Irrigation Advice
+        </button>
+
+        <div
+          id="irrigationResult"
+          class="feature-result"
+          aria-live="polite"
+        >
+          Select a crop to get watering guidance.
+        </div>
+
+        <button
+          class="voice"
+          onclick="speakIrrigation()"
+        >
+          🔊 தமிழில் வழிகாட்டுதலைக் கேட்க
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- MARKET PRICE -->
+    <section id="market" class="screen">
+
+      <button class="back" onclick="showScreen('home')">
+        ← Back
+      </button>
+
+      <h2>💰 Market Price</h2>
+
+      <div class="big-card">
+        📈
+        <strong>Market Price</strong>
+
+        <p>
+          Live mandi prices are not connected yet.
+        </p>
+
+        <p>
+          நேரடி சந்தை விலைகளைப் பெற இந்த வசதிக்கு
+          market price data source இணைக்க வேண்டும்.
+        </p>
+      </div>
+
+    </section>
+
   </main>
-  <nav><button onclick="showScreen('home')">⌂<span>Home</span></button><button onclick="showScreen('capture')">📷<span>Scan</span></button><button onclick="startVoice()">🎤<span>Voice</span></button></nav>
+
+
+  <!-- BOTTOM NAVIGATION -->
+  <nav>
+
+    <button onclick="showScreen('home')">
+      ⌂<span>Home</span>
+    </button>
+
+    <button onclick="showScreen('capture')">
+      📷<span>Scan</span>
+    </button>
+
+    <button onclick="startVoice()">
+      🎤<span>Voice</span>
+    </button>
+
+  </nav>
+
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js" crossorigin="anonymous"></script><script src="script.js"></script>
+
+
+<!-- TENSORFLOW AND EXISTING AI -->
+<script
+  src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"
+  crossorigin="anonymous">
+</script>
+
+<script src="script.js"></script>
+
+
+<!-- WEATHER, IRRIGATION AND TAMIL VOICE -->
+<script>
+
+  // ==================================
+  // WEATHER
+  // ==================================
+
+  let weatherTamilText = "";
+
+  async function getWeather() {
+
+    const city = document.getElementById("city").value.trim();
+    const output = document.getElementById("weatherResult");
+
+    if (!city) {
+      output.textContent = "Please enter your city name.";
+      return;
+    }
+
+    output.textContent = "Loading weather details...";
+
+    try {
+
+      const geoURL =
+        "https://geocoding-api.open-meteo.com/v1/search?name=" +
+        encodeURIComponent(city) +
+        "&count=1&language=en&format=json";
+
+      const geoResponse = await fetch(geoURL);
+
+      if (!geoResponse.ok) {
+        throw new Error("Location search failed");
+      }
+
+      const geoData = await geoResponse.json();
+
+      if (!geoData.results || geoData.results.length === 0) {
+        output.textContent =
+          "City not found. Please enter another city.";
+        return;
+      }
+
+      const place = geoData.results[0];
+
+      const weatherURL =
+        "https://api.open-meteo.com/v1/forecast" +
+        "?latitude=" + place.latitude +
+        "&longitude=" + place.longitude +
+        "&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m";
+
+      const response = await fetch(weatherURL);
+
+      if (!response.ok) {
+        throw new Error("Weather request failed");
+      }
+
+      const data = await response.json();
+      const w = data.current;
+
+      const conditions = {
+        0: "Clear sky",
+        1: "Mainly clear",
+        2: "Partly cloudy",
+        3: "Cloudy",
+        45: "Fog",
+        48: "Fog",
+        51: "Light drizzle",
+        53: "Drizzle",
+        55: "Heavy drizzle",
+        61: "Light rain",
+        63: "Rain",
+        65: "Heavy rain",
+        71: "Light snow",
+        80: "Rain showers",
+        81: "Rain showers",
+        82: "Heavy rain showers",
+        95: "Thunderstorm"
+      };
+
+      const condition =
+        conditions[w.weather_code] || "Variable weather";
+
+      const safeName = document.createElement("h3");
+      safeName.textContent =
+        "📍 " + place.name + ", " + (place.country || "");
+
+      output.replaceChildren(safeName);
+
+      const details = [
+        "🌡️ Temperature: " + w.temperature_2m + " °C",
+        "💧 Humidity: " + w.relative_humidity_2m + "%",
+        "🌧️ Precipitation: " + w.precipitation + " mm",
+        "🌤️ Condition: " + condition,
+        "💨 Wind speed: " + w.wind_speed_10m + " km/h"
+      ];
+
+      details.forEach(function(detail) {
+        const p = document.createElement("p");
+        p.textContent = detail;
+        output.appendChild(p);
+      });
+
+      weatherTamilText =
+        place.name +
+        ". வெப்பநிலை " + w.temperature_2m +
+        " டிகிரி செல்சியஸ். காற்றின் ஈரப்பதம் " +
+        w.relative_humidity_2m +
+        " சதவீதம். மழையளவு " + w.precipitation +
+        " மில்லிமீட்டர். வானிலை " + condition + ".";
+
+    } catch (error) {
+
+      output.textContent =
+        "Weather could not be loaded. Check your internet connection and try again.";
+
+      console.error("Weather error:", error);
+    }
+  }
+
+
+  // ==================================
+  // IRRIGATION GUIDANCE
+  // ==================================
+
+  let irrigationTamilText = "";
+
+  function getIrrigation() {
+
+    const crop = document.getElementById("crop").value;
+    const output = document.getElementById("irrigationResult");
+
+    const advice = {
+
+      rice: {
+        en: "Check field water levels regularly. Avoid unnecessary continuous flooding.",
+        ta: "நெல் வயலில் நீர்மட்டத்தைத் தொடர்ந்து கண்காணிக்கவும். தேவையற்ற நீர் தேக்கத்தைத் தவிர்க்கவும்."
+      },
+
+      tomato: {
+        en: "Maintain consistent soil moisture. Avoid waterlogging near the roots.",
+        ta: "தக்காளிச் செடிகளுக்கு சீரான மண்ணின் ஈரப்பதத்தைப் பராமரிக்கவும். வேர்களில் நீர் தேங்குவதைத் தவிர்க்கவும்."
+      },
+
+      mango: {
+        en: "Water according to soil dryness, tree age and rainfall.",
+        ta: "மண்ணின் வறட்சி, மரத்தின் வயது மற்றும் மழையைப் பொறுத்து நீர் பாய்ச்சவும்."
+      },
+
+      banana: {
+        en: "Check soil moisture regularly, especially during hot weather.",
+        ta: "வாழைச் செடிகளின் மண்ணில் ஈரப்பதம் உள்ளதா என்று அடிக்கடி பார்க்கவும். வெயில் காலத்தில் கவனமாகக் கண்காணிக்கவும்."
+      },
+
+      groundnut: {
+        en: "Avoid water shortage and waterlogging. Monitor soil moisture during flowering and pod development.",
+        ta: "நிலக்கடலைப் பயிரில் நீர்ப்பற்றாக்குறையையும் நீர் தேக்கத்தையும் தவிர்க்கவும். பூக்கும் காலத்திலும் காய் உருவாகும் காலத்திலும் ஈரப்பதத்தைக் கண்காணிக்கவும்."
+      },
+
+      cotton: {
+        en: "Water according to soil moisture and crop growth stage. Ensure proper drainage.",
+        ta: "பருத்திப் பயிரின் வளர்ச்சி நிலை மற்றும் மண்ணின் ஈரப்பதத்திற்கு ஏற்ப நீர் பாய்ச்சவும். நீர் வடிகால் வசதியை உறுதி செய்யவும்."
+      }
+
+    };
+
+    const selected = advice[crop];
+
+    output.replaceChildren();
+
+    const p = document.createElement("p");
+    p.textContent = selected.en;
+    output.appendChild(p);
+
+    const note = document.createElement("p");
+    note.className = "feature-note";
+    note.textContent =
+      "General guidance only. Actual water needs depend on soil, crop stage and weather.";
+    output.appendChild(note);
+
+    irrigationTamilText = selected.ta;
+  }
+
+
+  // ==================================
+  // TAMIL TEXT-TO-SPEECH
+  // ==================================
+
+  function speakFeatureTamil(text) {
+
+    if (!("speechSynthesis" in window)) {
+      alert(
+        "Tamil voice is not supported in this browser. Try an updated browser."
+      );
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const speech = new SpeechSynthesisUtterance(text);
+
+    speech.lang = "ta-IN";
+    speech.rate = 0.85;
+
+    const voices = window.speechSynthesis.getVoices();
+
+    const tamilVoice = voices.find(function(voice) {
+      return voice.lang.toLowerCase().startsWith("ta");
+    });
+
+    if (tamilVoice) {
+      speech.voice = tamilVoice;
+    }
+
+    window.speechSynthesis.speak(speech);
+  }
+
+
+  function speakWeather() {
+
+    if (!weatherTamilText) {
+      speakFeatureTamil(
+        "முதலில் நகரத்தின் பெயரை உள்ளிட்டு வானிலை விவரங்களைப் பெறவும்."
+      );
+      return;
+    }
+
+    speakFeatureTamil(weatherTamilText);
+  }
+
+
+  function speakIrrigation() {
+
+    if (!irrigationTamilText) {
+      speakFeatureTamil(
+        "முதலில் பயிரைத் தேர்ந்தெடுத்து நீர்ப்பாசன வழிகாட்டுதலைப் பெறவும்."
+      );
+      return;
+    }
+
+    speakFeatureTamil(irrigationTamilText);
+  }
+
+</script>
+
 </body>
 </html>
